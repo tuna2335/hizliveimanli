@@ -5,25 +5,23 @@
   <title>3. Soru</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
-    button { margin: 5px 0; padding: 10px 15px; font-size: 1em; }
-    .disabled { opacity: 0.5; pointer-events: none; }
-    #result { margin-top: 20px; font-weight: bold; }
-    #riddle { margin-top: 40px; font-size: 1.2em; }
+    button { margin: 5px 0; padding: 10px; width: 100%; }
+    button.disabled { background-color: #ccc; pointer-events: none; color: #666; }
+    #result { margin-top: 15px; font-weight: bold; }
+    #riddle { margin-top: 20px; font-style: italic; font-weight: bold; }
   </style>
 </head>
 <body>
   <h1>3. Soru</h1>
   <p>Hangisi sabır örneği değildir?</p>
-  <ul>
-    <li><button data-answer="a">a) Oruçluyken iftara birkaç saat kala epey acıktınız.</button></li>
-    <li><button data-answer="b">b) Hiç suçunuz olmadığı hâlde bir olayda haksız yere suçlanıyorsunuz.</button></li>
-    <li><button data-answer="c">c) Sizi çok öfkelendiren bir duruma bir süre maruz kaldınız.</button></li>
-    <li><button data-answer="d">d) Birini zor durumda kalmış halde gördünüz</button></li>
-    <li><button data-answer="e">e) Çok istediğiniz bir şey bir türlü gerçekleşmiyor</button></li>
-  </ul>
+  <button data-answer="a">a) Oruçluyken iftara birkaç saat kala epey acıktınız.</button>
+  <button data-answer="b">b) Hiç suçunuz olmadığı hâlde bir olayda haksız yere suçlanıyorsunuz.</button>
+  <button data-answer="c">c) Sizi çok öfkelendiren bir duruma bir süre maruz kaldınız.</button>
+  <button data-answer="d">d) birini zor durumda kalmış halde gördünüz</button>
+  <button data-answer="e">e) Çok istediğiniz bir şey bir türlü gerçekleşmiyor</button>
+
   <p id="result"></p>
-  <p id="riddle" style="display:none;"><strong>Bilmece:</strong> Egemen iyi oynuyo bu sporu</p>
-  <p>Sonraki soruya geçmek için lütfen <a href="soru4.html">4. Soru</a> sayfasına gidin veya QR 5 kodunu okutun.</p>
+  <p id="riddle" style="display:none;">Egemen iyi oynuyo bu sporu</p>
 
   <script>
     let wrongCount = 0;
@@ -31,36 +29,31 @@
     const buttons = document.querySelectorAll("button");
     const result = document.getElementById("result");
     const riddle = document.getElementById("riddle");
+    let lock = false;
 
     buttons.forEach(button => {
       button.addEventListener("click", () => {
-        if (button.disabled) return;
+        if(lock) return;
+        const answer = button.getAttribute("data-answer");
 
-        const userAnswer = button.getAttribute("data-answer");
-
-        if (userAnswer === correctAnswer) {
+        if(answer === correctAnswer){
           result.textContent = "Doğru cevap!";
           riddle.style.display = "block";
           buttons.forEach(btn => {
-            btn.disabled = true;
             btn.classList.add("disabled");
+            btn.disabled = true;
           });
         } else {
           wrongCount++;
-          result.textContent = `Yanlış! ${wrongCount * 10} saniye ceza. Lütfen bekleyin.`;
-          button.disabled = true;
+          const penaltyTime = wrongCount * 10;
+          result.textContent = `Yanlış! ${penaltyTime} saniye ceza. Lütfen bekleyin...`;
           button.classList.add("disabled");
-
-          buttons.forEach(btn => btn.disabled = true);
-
+          button.disabled = true;
+          lock = true;
           setTimeout(() => {
-            buttons.forEach(btn => {
-              if (!btn.classList.contains("disabled")) {
-                btn.disabled = false;
-              }
-            });
+            lock = false;
             result.textContent = "";
-          }, wrongCount * 10 * 1000);
+          }, penaltyTime * 1000);
         }
       });
     });
