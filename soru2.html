@@ -1,144 +1,63 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<title>Hızlı ve İmanlı - 2. Soru</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<style>
-  body { font-family: Arial, sans-serif; padding: 30px; }
-  .hidden { display: none; }
-  button:disabled { background-color: #ccc; }
-  .answered { color: #bbb; }
-  #penalty { color: red; font-weight: bold; }
-</style>
+  <meta charset="UTF-8" />
+  <title>2. Soru</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    button { margin: 5px 0; padding: 10px; width: 100%; }
+    button.disabled { background-color: #ccc; pointer-events: none; color: #666; }
+    #result { margin-top: 15px; font-weight: bold; }
+    #riddle { margin-top: 20px; font-style: italic; font-weight: bold; }
+  </style>
 </head>
 <body>
-
-<h2>2. Soru</h2>
-<p id="penalty" class="hidden"></p>
-<div id="questionArea">
+  <h1>2. Soru</h1>
   <p>Vakıflar hangi İslami unsur sayesinde çıkmıştır?</p>
   <button data-answer="a">a) yardımseverlik</button>
   <button data-answer="b">b) sabır</button>
   <button data-answer="c">c) dürüstlük</button>
   <button data-answer="d">d) adabımuaşeret</button>
   <button data-answer="e">e) ben(enes)</button>
-</div>
 
-<div id="puzzle" class="hidden">
-  <p><strong>Bilmece:</strong> bu ağacın okulda ne işi var? (ipucu: sahil)</p>
-</div>
+  <p id="result"></p>
+  <p id="riddle" style="display:none;">Bu ağacın okulda ne işi var? (ipucu: sahil)</p>
 
-<script>
-// Firebase yapılandırması:
-const firebaseConfig = {
-  apiKey: "AIzaSyAySqZBG0_xpbxnsR8hZo3_Mz6vc57gtys",
-  authDomain: "hizliveimanli-ce2e8.firebaseapp.com",
-  projectId: "hizliveimanli-ce2e8",
-  storageBucket: "hizliveimanli-ce2e8.appspot.com",
-  messagingSenderId: "841569685733",
-  appId: "1:841569685733:web:85bbd615217216142f440c",
-  measurementId: "G-TYK4R241V4"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+  <script>
+    let wrongCount = 0;
+    const correctAnswer = "a";
+    const buttons = document.querySelectorAll("button");
+    const result = document.getElementById("result");
+    const riddle = document.getElementById("riddle");
+    let lock = false;
 
-const urlParams = new URLSearchParams(window.location.search);
-const playerName = urlParams.get("name");
-if(!playerName){
-  alert("Lütfen isimle giriş yapın.");
-  window.location = "index.html";
-}
+    buttons.forEach(button => {
+      button.addEventListener("click", () => {
+        if(lock) return;
+        const answer = button.getAttribute("data-answer");
 
-const playerRef = db.collection("players").doc(playerName);
-
-const correctAnswer = "a";
-let penaltyCount = 0;
-
-const penaltyDisplay = document.getElementById("penalty");
-const questionArea = document.getElementById("questionArea");
-const puzzleDiv = document.getElementById("puzzle");
-
-function disableButtons() {
-  document.querySelectorAll("#questionArea button").forEach(b=>{
-    b.disabled = true;
-  });
-}
-
-function markButtonWrong(btn) {
-  btn.classList.add("answered");
-  btn.style.color = "#bbb";
-}
-
-async function checkPenalty(){
-  const doc = await playerRef.get();
-  if(!doc.exists){
-    alert("Oyuncu bulunamadı.");
-    window.location = "index.html";
-    return false;
-  }
-  const data = doc.data();
-  const now = Date.now();
-
-  // Stage kontrolü: sadece stage "1.soru" veya "bilmece1" olan oyuncu bu sayfayı görebilir
-  if(!["1.soru","bilmece1"].includes(data.stage)){
-    alert("Bu soruyu şu anda çözemezsiniz.");
-    window.location = "index.html";
-    return false;
-  }
-
-  if(data.penaltyUntil && data.penaltyUntil > now){
-    const secondsLeft = Math.ceil((data.penaltyUntil - now)/1000);
-    penaltyDisplay.textContent = `Ceza süresi: ${secondsLeft} saniye. Lütfen bekleyin.`;
-    penaltyDisplay.classList.remove("hidden");
-    disableButtons();
-    setTimeout(checkPenalty, 1000);
-    return true;
-  } else {
-    penaltyDisplay.classList.add("hidden");
-    return false;
-  }
-}
-
-async function handleAnswer(event){
-  const btn = event.target;
-  const answer = btn.getAttribute("data-answer");
-  const doc = await playerRef.get();
-  if(!doc.exists) return;
-
-  const data = doc.data();
-
-  if(data.penaltyUntil && data.penaltyUntil > Date.now()){
-    return;
-  }
-
-  if(answer === correctAnswer){
-    await playerRef.update({
-      stage: "bilmece2",
-      penaltyUntil: 0
+        if(answer === correctAnswer){
+          result.textContent = "Doğru cevap!";
+          riddle.style.display = "block";
+          buttons.forEach(btn => {
+            btn.classList.add("disabled");
+            btn.disabled = true;
+          });
+        } else {
+          wrongCount++;
+          const penaltyTime = wrongCount * 10;
+          result.textContent = `Yanlış! ${penaltyTime} saniye ceza. Lütfen bekleyin...`;
+          button.classList.add("disabled");
+          button.disabled = true;
+          lock = true;
+          setTimeout(() => {
+            lock = false;
+            result.textContent = "";
+          }, penaltyTime * 1000);
+        }
+      });
     });
-    questionArea.style.display = "none";
-    puzzleDiv.classList.remove("hidden");
-    disableButtons();
-  } else {
-    penaltyCount = (data.wrongCount || 0) + 1;
-    const newPenalty = Date.now() + (penaltyCount * 10 * 1000);
-    await playerRef.update({
-      penaltyUntil: newPenalty,
-      wrongCount: penaltyCount
-    });
-    markButtonWrong(btn);
-    checkPenalty();
-  }
-}
-
-document.querySelectorAll("#questionArea button").forEach(b=>{
-  b.addEventListener("click", handleAnswer);
-});
-
-checkPenalty();
-</script>
-
+  </script>
 </body>
 </html>
+
