@@ -2,65 +2,53 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>5. Soru</title>
+  <title>Final Soru</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
-    button { margin: 5px 0; padding: 10px 15px; font-size: 1em; }
-    .disabled { opacity: 0.5; pointer-events: none; }
-    #result { margin-top: 20px; font-weight: bold; }
-    #riddle { margin-top: 40px; font-size: 1.2em; }
+    button { margin: 5px 0; padding: 10px; width: 100%; }
+    button.disabled { background-color: #ccc; pointer-events: none; color: #666; }
+    #result { margin-top: 15px; font-weight: bold; }
   </style>
 </head>
 <body>
-  <h1>5. Soru</h1>
-  <p>Hangisi dürüstlükle bağdaşmaz?</p>
-  <ul>
-    <li><button data-answer="a">a) Doğruyu söylemek</button></li>
-    <li><button data-answer="b">b) Yalan söylemek</button></li>
-    <li><button data-answer="c">c) Verilen sözü tutmak</button></li>
-    <li><button data-answer="d">d) Haksızlık yapmamak</button></li>
-    <li><button data-answer="e">e) İyilik yapmak</button></li>
-  </ul>
+  <h1>Final Soru</h1>
+  <p>En iyi hoca kimdir?</p>
+  <button data-answer="a">a) Aykut hoca</button>
+  <button data-answer="b">b) İbrahim hoca</button>
+  <button data-answer="c">c) Miray hoca</button>
+  <button data-answer="d">d) Serhat hoca</button>
+  <button data-answer="e">e) Necmettin hoca</button>
+
   <p id="result"></p>
-  <p id="riddle" style="display:none;"><strong>Bilmece:</strong> Sabahın erken saatinde en güzel manzara</p>
-  <p>Sonraki aşama için <a href="odul.html">Ödül Sayfası</a>'na gidin.</p>
 
   <script>
-    let wrongCount = 0;
     const correctAnswer = "b";
     const buttons = document.querySelectorAll("button");
     const result = document.getElementById("result");
-    const riddle = document.getElementById("riddle");
+    let lock = false;
+    let wrongCount = 0;
 
     buttons.forEach(button => {
       button.addEventListener("click", () => {
-        if (button.disabled) return;
-
-        const userAnswer = button.getAttribute("data-answer");
-
-        if (userAnswer === correctAnswer) {
-          result.textContent = "Doğru cevap!";
-          riddle.style.display = "block";
+        if(lock) return;
+        const answer = button.getAttribute("data-answer");
+        if(answer === correctAnswer){
+          result.textContent = "Tebrikler! Kazandınız!";
           buttons.forEach(btn => {
-            btn.disabled = true;
             btn.classList.add("disabled");
+            btn.disabled = true;
           });
         } else {
           wrongCount++;
-          result.textContent = `Yanlış! ${wrongCount * 10} saniye ceza. Lütfen bekleyin.`;
-          button.disabled = true;
+          const penaltyTime = wrongCount * 10;
+          result.textContent = `Yanlış! ${penaltyTime} saniye ceza. Lütfen bekleyin...`;
           button.classList.add("disabled");
-
-          buttons.forEach(btn => btn.disabled = true);
-
+          button.disabled = true;
+          lock = true;
           setTimeout(() => {
-            buttons.forEach(btn => {
-              if (!btn.classList.contains("disabled")) {
-                btn.disabled = false;
-              }
-            });
+            lock = false;
             result.textContent = "";
-          }, wrongCount * 10 * 1000);
+          }, penaltyTime * 1000);
         }
       });
     });
