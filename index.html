@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hızlı ve İmanlı - Hoşgeldiniz</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9f9f9; text-align: center; padding: 50px; }
+    input, button { padding: 10px; font-size: 16px; margin: 10px; }
+    button { cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Hızlı ve İmanlı Yarışmasına Hoşgeldiniz</h1>
+  <p>Lütfen isminizi girin:</p>
+  <input type="text" id="username" placeholder="İsminizi yazınız" />
+  <br />
+  <button onclick="startGame()">Başla</button>
+
+  <script>
+    function startGame() {
+      const name = document.getElementById('username').value.trim();
+      if (!name) {
+        alert('Lütfen isim giriniz!');
+        return;
+      }
+      // İsmi localStorage'a kaydediyoruz
+      localStorage.setItem('username', name);
+      localStorage.setItem('stage', 'baslangic'); // başlangıç aşaması
+      
+      // Yarışmacıyı ilk soruya yönlendir
+      window.location.href = 'soru1.html';
+    }
+  </script>
+</body>
+</html>

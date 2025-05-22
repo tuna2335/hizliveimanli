@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hızlı ve İmanlı - 1. QR Kod</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    #bilmece { margin-top: 20px; font-size: 1.2em; color: darkblue; display: none; }
+  </style>
+</head>
+<body>
+
+  <h2>İsim Giriniz</h2>
+  <form id="isimForm">
+    <input type="text" id="isim" placeholder="Adınızı yazınız" required />
+    <button type="submit">Başla</button>
+  </form>
+
+  <div id="bilmece">
+    <h3>Bilmece:</h3>
+    <p>Bu kişi uyur genelde, uyandırması da zordur.</p>
+  </div>
+
+  <script>
+    const form = document.getElementById('isimForm');
+    const bilmece = document.getElementById('bilmece');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const isim = document.getElementById('isim').value.trim();
+      if (isim) {
+        // İsim girildi, bilmeceyi göster
+        bilmece.style.display = 'block';
+        // Formu gizleyebiliriz ya da bırakabiliriz
+        form.style.display = 'none';
+
+        // İstersen buraya kullanıcı adını scoreboard'a veya başka yere kaydetmek için kod ekleyebilirsin
+        // localStorage veya Firebase kullanabilirsin
+        localStorage.setItem('oyuncuAdi', isim);
+        localStorage.setItem('kategori', 'baslangic'); // oyuncu başlangıçta
+      }
+    });
+  </script>
+
+</body>
+</html>
