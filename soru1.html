@@ -1,139 +1,66 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<title>Hızlı ve İmanlı - 1. Soru</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<style>
-  body { font-family: Arial, sans-serif; padding: 30px; }
-  .hidden { display: none; }
-  button:disabled { background-color: #ccc; }
-  .answered { color: #bbb; }
-  #penalty { color: red; font-weight: bold; }
-</style>
+  <meta charset="UTF-8" />
+  <title>1. Soru</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    button { margin: 5px 0; padding: 10px 15px; font-size: 1em; }
+    .disabled { opacity: 0.5; pointer-events: none; }
+    #result { margin-top: 20px; font-weight: bold; }
+    #riddle { margin-top: 40px; font-size: 1.2em; }
+  </style>
 </head>
 <body>
-
-<h2>1. Soru</h2>
-<p id="penalty" class="hidden"></p>
-<div id="questionArea">
+  <h1>1. Soru</h1>
   <p>Aşağıdakilerden hangisi dürüstlük ile eşleşmez?</p>
-  <button data-answer="a">a) sıdk</button>
-  <button data-answer="b">b) sadakat</button>
-  <button data-answer="c">c) yalan söylememek</button>
-  <button data-answer="d">d) ahilik</button>
-  <button data-answer="e">e) infak</button>
-</div>
+  <ul>
+    <li><button data-answer="a">a) sıdk</button></li>
+    <li><button data-answer="b">b) sadakat</button></li>
+    <li><button data-answer="c">c) yalan söylememek</button></li>
+    <li><button data-answer="d">d) ahilik</button></li>
+    <li><button data-answer="e">e) infak</button></li>
+  </ul>
+  <p id="result"></p>
+  <p id="riddle" style="display:none;"><strong>Bilmece:</strong> aç mısın? bi uğra bence!</p>
 
-<div id="puzzle" class="hidden">
-  <p><strong>Bilmece:</strong> aç mısın? bi uğra bence!</p>
-</div>
+  <script>
+    let wrongCount = 0;
+    const correctAnswer = "e";
+    const buttons = document.querySelectorAll("button");
+    const result = document.getElementById("result");
+    const riddle = document.getElementById("riddle");
 
-<script>
-// Firebase yapılandırması:
-const firebaseConfig = {
-  apiKey: "AIzaSyAySqZBG0_xpbxnsR8hZo3_Mz6vc57gtys",
-  authDomain: "hizliveimanli-ce2e8.firebaseapp.com",
-  projectId: "hizliveimanli-ce2e8",
-  storageBucket: "hizliveimanli-ce2e8.appspot.com",
-  messagingSenderId: "841569685733",
-  appId: "1:841569685733:web:85bbd615217216142f440c",
-  measurementId: "G-TYK4R241V4"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+    buttons.forEach(button => {
+      button.addEventListener("click", () => {
+        if (button.disabled) return;
 
-const urlParams = new URLSearchParams(window.location.search);
-const playerName = urlParams.get("name");
-if(!playerName){
-  alert("Lütfen isimle giriş yapın.");
-  window.location = "index.html";
-}
+        const userAnswer = button.getAttribute("data-answer");
 
-const playerRef = db.collection("players").doc(playerName);
-
-const correctAnswer = "e";
-let penaltyCount = 0;
-
-const penaltyDisplay = document.getElementById("penalty");
-const questionArea = document.getElementById("questionArea");
-const puzzleDiv = document.getElementById("puzzle");
-
-function disableButtons() {
-  document.querySelectorAll("#questionArea button").forEach(b=>{
-    b.disabled = true;
-  });
-}
-
-function markButtonWrong(btn) {
-  btn.classList.add("answered");
-  btn.style.color = "#bbb";
-}
-
-async function checkPenalty(){
-  const doc = await playerRef.get();
-  if(!doc.exists){
-    alert("Oyuncu bulunamadı.");
-    window.location = "index.html";
-    return false;
-  }
-  const data = doc.data();
-  const now = Date.now();
-  if(data.penaltyUntil && data.penaltyUntil > now){
-    const secondsLeft = Math.ceil((data.penaltyUntil - now)/1000);
-    penaltyDisplay.textContent = `Ceza süresi: ${secondsLeft} saniye. Lütfen bekleyin.`;
-    penaltyDisplay.classList.remove("hidden");
-    disableButtons();
-    setTimeout(checkPenalty, 1000);
-    return true;
-  } else {
-    penaltyDisplay.classList.add("hidden");
-    return false;
-  }
-}
-
-async function handleAnswer(event){
-  const btn = event.target;
-  const answer = btn.getAttribute("data-answer");
-  const doc = await playerRef.get();
-  if(!doc.exists) return;
-
-  const data = doc.data();
-
-  // Eğer ceza varsa cevap verilemez
-  if(data.penaltyUntil && data.penaltyUntil > Date.now()){
-    return;
-  }
-
-  if(answer === correctAnswer){
-    // Doğru cevap
-    await playerRef.update({
-      stage: "bilmece1",
-      penaltyUntil: 0
+        if (userAnswer === correctAnswer) {
+          result.textContent = "Doğru cevap!";
+          riddle.style.display = "block";
+          buttons.forEach(btn => btn.disabled = true);
+          buttons.forEach(btn => btn.classList.add("disabled"));
+        } else {
+          wrongCount++;
+          result.textContent = `Yanlış! ${wrongCount * 10} saniye ceza. Lütfen bekleyin.`;
+          button.disabled = true;
+          button.classList.add("disabled");
+          // 10*n saniye bekletme
+          buttons.forEach(btn => btn.disabled = true);
+          setTimeout(() => {
+            // Cezadan sonra sadece yanlış işaretli butonlar disabled kalacak, diğerleri aktif
+            buttons.forEach(btn => {
+              if (!btn.classList.contains("disabled")) {
+                btn.disabled = false;
+              }
+            });
+            result.textContent = "";
+          }, wrongCount * 10 * 1000);
+        }
+      });
     });
-    questionArea.style.display = "none";
-    puzzleDiv.classList.remove("hidden");
-    disableButtons();
-  } else {
-    // Yanlış cevap -> ceza ekle
-    penaltyCount = (data.wrongCount || 0) + 1;
-    const newPenalty = Date.now() + (penaltyCount * 10 * 1000);
-    await playerRef.update({
-      penaltyUntil: newPenalty,
-      wrongCount: penaltyCount
-    });
-    markButtonWrong(btn);
-    checkPenalty();
-  }
-}
-
-document.querySelectorAll("#questionArea button").forEach(b=>{
-  b.addEventListener("click", handleAnswer);
-});
-
-checkPenalty();
-</script>
-
+  </script>
 </body>
 </html>
