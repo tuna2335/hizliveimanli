@@ -1,145 +1,69 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<title>Hızlı ve İmanlı - 3. Soru</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<style>
-  body { font-family: Arial, sans-serif; padding: 30px; }
-  .hidden { display: none; }
-  button:disabled { background-color: #ccc; }
-  .answered { color: #bbb; }
-  #penalty { color: red; font-weight: bold; }
-</style>
+  <meta charset="UTF-8" />
+  <title>3. Soru</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    button { margin: 5px 0; padding: 10px 15px; font-size: 1em; }
+    .disabled { opacity: 0.5; pointer-events: none; }
+    #result { margin-top: 20px; font-weight: bold; }
+    #riddle { margin-top: 40px; font-size: 1.2em; }
+  </style>
 </head>
 <body>
-
-<h2>3. Soru</h2>
-<p id="penalty" class="hidden"></p>
-<div id="questionArea">
+  <h1>3. Soru</h1>
   <p>Hangisi sabır örneği değildir?</p>
-  <button data-answer="a">a) Oruçluyken iftara birkaç saat kala epey acıktınız.</button>
-  <button data-answer="b">b) Hiç suçunuz olmadığı hâlde bir olayda haksız yere suçlanıyorsunuz.</button>
-  <button data-answer="c">c) Sizi çok öfkelendiren bir duruma bir süre maruz kaldınız.</button>
-  <button data-answer="d">d) Birini zor durumda kalmış halde gördünüz</button>
-  <button data-answer="e">e) Çok istediğiniz bir şey bir türlü gerçekleşmiyor</button>
-</div>
+  <ul>
+    <li><button data-answer="a">a) Oruçluyken iftara birkaç saat kala epey acıktınız.</button></li>
+    <li><button data-answer="b">b) Hiç suçunuz olmadığı hâlde bir olayda haksız yere suçlanıyorsunuz.</button></li>
+    <li><button data-answer="c">c) Sizi çok öfkelendiren bir duruma bir süre maruz kaldınız.</button></li>
+    <li><button data-answer="d">d) Birini zor durumda kalmış halde gördünüz</button></li>
+    <li><button data-answer="e">e) Çok istediğiniz bir şey bir türlü gerçekleşmiyor</button></li>
+  </ul>
+  <p id="result"></p>
+  <p id="riddle" style="display:none;"><strong>Bilmece:</strong> Egemen iyi oynuyo bu sporu</p>
+  <p>Sonraki soruya geçmek için lütfen <a href="soru4.html">4. Soru</a> sayfasına gidin veya QR 5 kodunu okutun.</p>
 
-<div id="puzzle" class="hidden">
-  <p><strong>Bilmece:</strong> egemen iyi oynuyo bu sporu</p>
-</div>
+  <script>
+    let wrongCount = 0;
+    const correctAnswer = "d";
+    const buttons = document.querySelectorAll("button");
+    const result = document.getElementById("result");
+    const riddle = document.getElementById("riddle");
 
-<script>
-// Firebase yapılandırması:
-const firebaseConfig = {
-  apiKey: "AIzaSyAySqZBG0_xpbxnsR8hZo3_Mz6vc57gtys",
-  authDomain: "hizliveimanli-ce2e8.firebaseapp.com",
-  projectId: "hizliveimanli-ce2e8",
-  storageBucket: "hizliveimanli-ce2e8.appspot.com",
-  messagingSenderId: "841569685733",
-  appId: "1:841569685733:web:85bbd615217216142f440c",
-  measurementId: "G-TYK4R241V4"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+    buttons.forEach(button => {
+      button.addEventListener("click", () => {
+        if (button.disabled) return;
 
-const urlParams = new URLSearchParams(window.location.search);
-const playerName = urlParams.get("name");
-if(!playerName){
-  alert("Lütfen isimle giriş yapın.");
-  window.location = "index.html";
-}
+        const userAnswer = button.getAttribute("data-answer");
 
-const playerRef = db.collection("players").doc(playerName);
+        if (userAnswer === correctAnswer) {
+          result.textContent = "Doğru cevap!";
+          riddle.style.display = "block";
+          buttons.forEach(btn => {
+            btn.disabled = true;
+            btn.classList.add("disabled");
+          });
+        } else {
+          wrongCount++;
+          result.textContent = `Yanlış! ${wrongCount * 10} saniye ceza. Lütfen bekleyin.`;
+          button.disabled = true;
+          button.classList.add("disabled");
 
-const correctAnswer = "d";
-let penaltyCount = 0;
+          buttons.forEach(btn => btn.disabled = true);
 
-const penaltyDisplay = document.getElementById("penalty");
-const questionArea = document.getElementById("questionArea");
-const puzzleDiv = document.getElementById("puzzle");
-
-function disableButtons() {
-  document.querySelectorAll("#questionArea button").forEach(b=>{
-    b.disabled = true;
-  });
-}
-
-function markButtonWrong(btn) {
-  btn.classList.add("answered");
-  btn.style.color = "#bbb";
-}
-
-async function checkPenalty(){
-  const doc = await playerRef.get();
-  if(!doc.exists){
-    alert("Oyuncu bulunamadı.");
-    window.location = "index.html";
-    return false;
-  }
-  const data = doc.data();
-  const now = Date.now();
-
-  // Stage kontrolü: sadece stage "2.soru" veya "bilmece2" olan oyuncu bu sayfayı görebilir
-  if(!["2.soru","bilmece2"].includes(data.stage)){
-    alert("Bu soruyu şu anda çözemezsiniz.");
-    window.location = "index.html";
-    return false;
-  }
-
-  if(data.penaltyUntil && data.penaltyUntil > now){
-    const secondsLeft = Math.ceil((data.penaltyUntil - now)/1000);
-    penaltyDisplay.textContent = `Ceza süresi: ${secondsLeft} saniye. Lütfen bekleyin.`;
-    penaltyDisplay.classList.remove("hidden");
-    disableButtons();
-    setTimeout(checkPenalty, 1000);
-    return true;
-  } else {
-    penaltyDisplay.classList.add("hidden");
-    return false;
-  }
-}
-
-async function handleAnswer(event){
-  const btn = event.target;
-  const answer = btn.getAttribute("data-answer");
-  const doc = await playerRef.get();
-  if(!doc.exists) return;
-
-  const data = doc.data();
-
-  if(data.penaltyUntil && data.penaltyUntil > Date.now()){
-    return;
-  }
-
-  if(answer === correctAnswer){
-    await playerRef.update({
-      stage: "bilmece3",
-      penaltyUntil: 0,
-      wrongCount: 0
+          setTimeout(() => {
+            buttons.forEach(btn => {
+              if (!btn.classList.contains("disabled")) {
+                btn.disabled = false;
+              }
+            });
+            result.textContent = "";
+          }, wrongCount * 10 * 1000);
+        }
+      });
     });
-    questionArea.style.display = "none";
-    puzzleDiv.classList.remove("hidden");
-    disableButtons();
-  } else {
-    penaltyCount = (data.wrongCount || 0) + 1;
-    const newPenalty = Date.now() + (penaltyCount * 10 * 1000);
-    await playerRef.update({
-      penaltyUntil: newPenalty,
-      wrongCount: penaltyCount
-    });
-    markButtonWrong(btn);
-    checkPenalty();
-  }
-}
-
-document.querySelectorAll("#questionArea button").forEach(b=>{
-  b.addEventListener("click", handleAnswer);
-});
-
-checkPenalty();
-</script>
-
+  </script>
 </body>
 </html>
