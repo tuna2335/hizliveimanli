@@ -2,28 +2,26 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>4. Soru</title>
+  <title>5. Soru</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
-    button { margin: 5px 0; padding: 10px 15px; font-size: 1em; }
-    .disabled { opacity: 0.5; pointer-events: none; }
-    #result { margin-top: 20px; font-weight: bold; }
-    #riddle { margin-top: 40px; font-size: 1.2em; }
+    button { margin: 5px 0; padding: 10px; width: 100%; }
+    button.disabled { background-color: #ccc; pointer-events: none; color: #666; }
+    #result { margin-top: 15px; font-weight: bold; }
+    #riddle { margin-top: 20px; font-style: italic; font-weight: bold; }
   </style>
 </head>
 <body>
-  <h1>4. Soru</h1>
-  <p>Hangisi yardımlaşma ve dayanışmanın örneğidir?</p>
-  <ul>
-    <li><button data-answer="a">a) Dini bir toplantıya katılmak</button></li>
-    <li><button data-answer="b">b) Komşunu ziyaret etmek</button></li>
-    <li><button data-answer="c">c) Bir afet sonrası birlikte yardımda bulunmak</button></li>
-    <li><button data-answer="d">d) Televizyon izlemek</button></li>
-    <li><button data-answer="e">e) Yalnız kalmak</button></li>
-  </ul>
+  <h1>5. Soru</h1>
+  <p>Hangisi bir görgü kuralı değildir?</p>
+  <button data-answer="a">a) Bir iyilik yaparken karşı tarafı rencide etmemek</button>
+  <button data-answer="b">b) Kişisel temizliğe önem vermek</button>
+  <button data-answer="c">c) Bir işi yaparken dürüst olmak</button>
+  <button data-answer="d">d) Bir şey isterken kibar şekilde istemek</button>
+  <button data-answer="e">e) Bir şey isterken rica ederek kibar şekilde istemek</button>
+
   <p id="result"></p>
-  <p id="riddle" style="display:none;"><strong>Bilmece:</strong> Yazın serinleten, kışın üşüten</p>
-  <p>Sonraki soruya geçmek için lütfen <a href="soru5.html">5. Soru</a> sayfasına gidin veya QR 6 kodunu okutun.</p>
+  <p id="riddle" style="display:none;">Güzel hocam canım hocam</p>
 
   <script>
     let wrongCount = 0;
@@ -31,36 +29,31 @@
     const buttons = document.querySelectorAll("button");
     const result = document.getElementById("result");
     const riddle = document.getElementById("riddle");
+    let lock = false;
 
     buttons.forEach(button => {
       button.addEventListener("click", () => {
-        if (button.disabled) return;
+        if (lock) return;
+        const answer = button.getAttribute("data-answer");
 
-        const userAnswer = button.getAttribute("data-answer");
-
-        if (userAnswer === correctAnswer) {
+        if (answer === correctAnswer) {
           result.textContent = "Doğru cevap!";
           riddle.style.display = "block";
           buttons.forEach(btn => {
-            btn.disabled = true;
             btn.classList.add("disabled");
+            btn.disabled = true;
           });
         } else {
           wrongCount++;
-          result.textContent = `Yanlış! ${wrongCount * 10} saniye ceza. Lütfen bekleyin.`;
-          button.disabled = true;
+          const penaltyTime = wrongCount * 10;
+          result.textContent = `Yanlış! ${penaltyTime} saniye ceza. Lütfen bekleyin...`;
           button.classList.add("disabled");
-
-          buttons.forEach(btn => btn.disabled = true);
-
+          button.disabled = true;
+          lock = true;
           setTimeout(() => {
-            buttons.forEach(btn => {
-              if (!btn.classList.contains("disabled")) {
-                btn.disabled = false;
-              }
-            });
+            lock = false;
             result.textContent = "";
-          }, wrongCount * 10 * 1000);
+          }, penaltyTime * 1000);
         }
       });
     });
